@@ -7,7 +7,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
 import os
-import getpass  # Import getpass for secure password input
+import getpass  
 from textblob import TextBlob
 
 def generate_secret_key(password):
@@ -38,21 +38,18 @@ def Update(sigma, ind, op, db_connection, file_path):
 
   salt, ks = generate_secret_key(password)
 
-  # Consider a more robust keyword generation method
+ # Keyword extraction using TextBlob
   with open("C:/Users/Janvi Mittal/OneDrive/Desktop/project.txt", 'r') as file:
     data = file.read()
     text = TextBlob(data)
-    # Choose appropriate method for keyword extraction
-    # Options: noun_phrases, keywords (default), nlp.extract_keywords
-    keywords = text.noun_phrases  # Example: extract noun phrases
+    keywords = text.words  
 
-  # Select the first keyword (adjust as needed)
-  keyword = keywords[0] if keywords else ""
 
-    # Extract meaningful keyword or use a keyword extraction library
-  # Replace with your keyword extraction logic
+  if keywords:
+    keyword = max(keywords, key=len)
+  else:
+    keyword = ""
 
-  # Update logic according to your state transition requirements
   tw = F(ks, keyword)
   stc, c = sigma.get(keyword, (0, 0))
 
@@ -82,11 +79,10 @@ def Update(sigma, ind, op, db_connection, file_path):
 
 
 # Connect to MongoDB
-# ... (update with your MongoDB connection details)
 client = MongoClient("mongodb://localhost:27017")
-db_connection = client["project"]  # Update with your MongoDB database name
+db_connection = client["project"]  
 
-file_path = "C:/Users/Janvi Mittal/OneDrive/Desktop/project.txt"  # Update with your file path
+file_path = "C:/Users/Janvi Mittal/OneDrive/Desktop/project.txt" 
 
 sigma = {}
 ind = 1
@@ -96,6 +92,4 @@ sigma = Update(sigma, ind, op, db_connection, file_path)
 
 print("Sigma:", sigma)
 
-# Close the database connection
-# ... (close the connection)
 client.close()
