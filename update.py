@@ -13,7 +13,14 @@ def H2(tw, st):
 
 def Update(sigma, ind, op, db_connection, file_path):
     ks = input("Enter the value of 'ks': ")
-    w = input("Enter the value of 'w': ")
+
+    # Read the contents of the file to generate the keyword
+    with open(file_path, 'r') as file:
+        data = file.read()
+
+    # Use the first few characters of the file content as the keyword
+    keyword_length = 10  # Adjust as needed
+    w = data[:keyword_length]
 
     tw = F(ks, w)
     stc, c = sigma.get(w, (0, 0))
@@ -25,11 +32,8 @@ def Update(sigma, ind, op, db_connection, file_path):
 
     sigma[w] = (stc_plus_1, c + 1)
 
-    with open(file_path, 'rb') as file:
-        data = file.read()
-
     # Encode the file data
-    encoded_data = hashlib.sha256(data).digest()
+    encoded_data = hashlib.sha256(data.encode()).digest()
 
     e = bytearray(ind.to_bytes(1, 'big')) + op.to_bytes(1, 'big') + kc_plus_1.to_bytes(1, 'big')
     e_xor = bytes(a ^ b for a, b in zip(e, H2(tw, stc_plus_1)))
@@ -38,10 +42,11 @@ def Update(sigma, ind, op, db_connection, file_path):
 
     # Store the encoded data in MongoDB
     encodedfiles = db_connection["encodedfiles"]
-    document = {"KeyColumn": u, "EncodedData": encoded_data}
+    document = {"KeyColumn": u, "EncodedData": encoded_data, "Keyword": w}  # Add the keyword to the document
     encodedfiles.insert_one(document)
 
     return sigma
+
 
 # Connect to MongoDB
 client = MongoClient("mongodb://localhost:27017")

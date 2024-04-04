@@ -1,6 +1,6 @@
-import mysql.connector
 import hashlib
 import secrets
+from pymongo import MongoClient
 
 def F(ks, w):
     return hashlib.sha256(ks.encode() + w.encode()).hexdigest()
@@ -14,20 +14,20 @@ def H2(tw, st):
 def Update(sigma, ind, op, db_connection, file_path):
     ks = input("Enter the value of 'ks': ")
     w = input("Enter the value of 'w': ")
-    
+
     tw = F(ks, w)
     stc, c = sigma.get(w, (0, 0))
     if stc == 1:
         sto, c = 0, 0
-    
+
     kc_plus_1 = secrets.choice([0, 1])
     stc_plus_1 = H1(tw, kc_plus_1)
 
     sigma[w] = (stc_plus_1, c + 1)
 
-    with open("C:/Users/Janvi Mittal/OneDrive/Desktop/project.txt", 'rb') as file:
+    with open(file_path, 'rb') as file:
         data = file.read()
-    
+
     # Encode the file data
     encoded_data = hashlib.sha256(data).digest()
 
@@ -36,22 +36,17 @@ def Update(sigma, ind, op, db_connection, file_path):
 
     u = H1(tw, stc_plus_1)
 
-    # Store the encoded data in MySQL
-    cursor = db_connection.cursor()
-    sql = "INSERT INTO encodedfiles (KeyColumn, EncodedData) VALUES (%s, %s)"
-    val = (u, encoded_data)
-    cursor.execute(sql, val)
-    db_connection.commit()
+    # Store the encoded data in MongoDB
+    encodedfiles = db_connection["encodedfiles"]
+    document = {"KeyColumn": u, "EncodedData": encoded_data, "Keyword": w}  # Add the keyword to the document
+    encodedfiles.insert_one(document)
 
     return sigma
 
-# Open MySQL database connection
-db_connection = mysql.connector.connect(
-    host="127.0.0.1",
-    user="root",
-    password="janvi",
-    database="mysql"
-)
+
+# Connect to MongoDB
+client = MongoClient("mongodb://localhost:27017")
+db_connection = client["project"]  # Update with your MongoDB database name
 
 file_path = "C:/Users/Janvi Mittal/OneDrive/Desktop/project.txt"  # Update with your file path
 
@@ -64,4 +59,4 @@ sigma = Update(sigma, ind, op, db_connection, file_path)
 print("Sigma:", sigma)
 
 # Close the database connection
-db_connection.close()
+client.close()
