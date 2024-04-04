@@ -1,6 +1,22 @@
 import hashlib
 import secrets
 from pymongo import MongoClient
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+import os
+
+def generate_secret_key(password):
+    salt = os.urandom(16)  # Generate a random salt
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,  # Length of the key
+        salt=salt,
+        iterations=100000,  # Number of iterations
+        backend=default_backend()
+    )
+    key = kdf.derive(password.encode())  # Derive a key from the password
+    return salt, key
 
 def F(ks, w):
     return hashlib.sha256(ks.encode() + w.encode()).hexdigest()
@@ -12,17 +28,18 @@ def H2(tw, st):
     return hashlib.sha256(tw.encode() + str(st).encode()).digest()
 
 def Update(sigma, ind, op, db_connection, file_path):
-    ks = input("Enter the value of 'ks': ")
+    password = input("Enter the password: ")
+    salt, ks = generate_secret_key(password)
 
     # Read the contents of the file to generate the keyword
     with open(file_path, 'r') as file:
         data = file.read()
 
     # Use the first few characters of the file content as the keyword
-    keyword_length = 10  # Adjust as needed
+    keyword_length = 20  # Adjust as needed
     w = data[:keyword_length]
 
-    tw = F(ks, w)
+    tw = F(ks.hex(), w)  # Use the hex representation of the key as ks
     stc, c = sigma.get(w, (0, 0))
     if stc == 1:
         sto, c = 0, 0

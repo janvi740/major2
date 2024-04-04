@@ -36,10 +36,10 @@ def Update(sigma, ind, op, db_connection, file_path):
         data = file.read()
 
     # Use the first few characters of the file content as the keyword
-    keyword_length = 20  # Adjust as needed
+    keyword_length = 20 
     w = data[:keyword_length]
 
-    tw = F(ks.hex(), w)  # Use the hex representation of the key as ks
+    tw = F(ks.hex(), w)  
     stc, c = sigma.get(w, (0, 0))
     if stc == 1:
         sto, c = 0, 0
@@ -59,7 +59,7 @@ def Update(sigma, ind, op, db_connection, file_path):
 
     # Store the encoded data in MongoDB
     encodedfiles = db_connection["encodedfiles"]
-    document = {"KeyColumn": u, "EncodedData": encoded_data, "Keyword": w}  # Add the keyword to the document
+    document = {"KeyColumn": u, "EncodedData": encoded_data, "Keyword": w}  
     encodedfiles.insert_one(document)
 
     return sigma
@@ -67,9 +67,9 @@ def Update(sigma, ind, op, db_connection, file_path):
 
 # Connect to MongoDB
 client = MongoClient("mongodb://localhost:27017")
-db_connection = client["project"]  # Update with your MongoDB database name
+db_connection = client["project"]  
 
-file_path = "C:/Users/Janvi Mittal/OneDrive/Desktop/project.txt"  # Update with your file path
+file_path = "C:/Users/Janvi Mittal/OneDrive/Desktop/project.txt" 
 
 sigma = {}
 ind = 1
@@ -79,5 +79,4 @@ sigma = Update(sigma, ind, op, db_connection, file_path)
 
 print("Sigma:", sigma)
 
-# Close the database connection
 client.close()
