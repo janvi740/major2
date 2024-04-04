@@ -36,7 +36,7 @@ def Update(sigma, ind, op, db_connection, file_path):
         data = file.read()
 
     # Use the first few characters of the file content as the keyword
-    keyword_length = 10  # Adjust as needed
+    keyword_length = 20  # Adjust as needed
     w = data[:keyword_length]
 
     tw = F(ks.hex(), w)  # Use the hex representation of the key as ks
